@@ -10,6 +10,7 @@ import SmartInbox from './components/inbox/SmartInbox';
 import LeadGenerator from './components/leads/LeadGenerator';
 import CampaignBuilder from './components/campaigns/CampaignBuilder';
 import { UnifiedInboxLayout } from './components/UnifiedInbox';
+import { MultiChannelCampaign, AIVoiceAgent } from './components/campaigns';
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,8 @@ const App: React.FC = () => {
             <Route path="/inbox" element={<SmartInbox />} />
             <Route path="/leads" element={<LeadGenerator />} />
             <Route path="/campaigns" element={<CampaignBuilder />} />
+            <Route path="/campaigns/multi-channel" element={<MultiChannelCampaign />} />
+            <Route path="/campaigns/voice-agent" element={<AIVoiceAgent />} />
             <Route path="/unified-inbox" element={<UnifiedInboxLayout />} />
           </Routes>
         </MainLayout>
