@@ -22,6 +22,8 @@ import {
   useTheme,
   alpha,
   Alert,
+  InputBase,
+  Fade,
 } from '@mui/material';
 import {
   Phone as PhoneIcon,
@@ -34,14 +36,20 @@ import {
   Timeline as TimelineIcon,
   PhoneCallback as PhoneCallbackIcon,
   VoiceChat as VoiceChatIcon,
+  Search as SearchIcon,
+  Star as StarIcon,
+  BusinessCenter as BusinessCenterIcon,
+  Twitter as TwitterIcon,
+  EmojiEvents as EmojiEventsIcon,
 } from '@mui/icons-material';
 import VoiceCallService, { VoiceCall, CallScheduleParams } from '../../services/VoiceCallService';
 
 interface AIVoiceAgentProps {
   onCallComplete?: (callData: VoiceCall) => void;
+  lead?: any; // Assuming 'any' type for the lead prop
 }
 
-const AIVoiceAgent: React.FC<AIVoiceAgentProps> = ({ onCallComplete }) => {
+const AIVoiceAgent: React.FC<AIVoiceAgentProps> = ({ onCallComplete, lead }) => {
   const theme = useTheme();
   const [calls, setCalls] = useState<VoiceCall[]>([]);
   const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null);

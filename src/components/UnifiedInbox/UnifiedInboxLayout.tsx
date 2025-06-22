@@ -3,10 +3,27 @@ import { Box, Grid, Typography } from '@mui/material';
 import ChannelFilterSidebar from './ChannelFilterSidebar';
 import MessageListPanel from './MessageListPanel';
 import ConversationDrawer from './ConversationDrawer';
+import { Thread } from './MessageThread';
 
 const UnifiedInboxLayout: React.FC = () => {
-  const [selectedThread, setSelectedThread] = useState<any | null>(null);
-  const [channelFilter, setChannelFilter] = useState<string[]>([]);
+  const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+  const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
+
+  const handleChannelToggle = (channel: string) => {
+    setSelectedChannels(prev =>
+      prev.includes(channel)
+        ? prev.filter(ch => ch !== channel)
+        : [...prev, channel]
+    );
+  };
+
+  const handleThreadSelect = (thread: Thread) => {
+    setSelectedThread(thread);
+  };
+
+  const handleCloseDrawer = () => {
+    setSelectedThread(null);
+  };
 
   return (
     <Box sx={{ 
@@ -41,19 +58,22 @@ const UnifiedInboxLayout: React.FC = () => {
         <Grid container spacing={3}>
           <Grid item xs={12} md={2}>
             <ChannelFilterSidebar
-              selectedChannels={channelFilter}
-              onChange={setChannelFilter}
+              selectedChannels={selectedChannels}
+              onChannelToggle={handleChannelToggle}
             />
           </Grid>
           <Grid item xs={12} md={5}>
             <MessageListPanel
-              channelFilter={channelFilter}
-              onSelectThread={setSelectedThread}
-              selectedThreadId={selectedThread?.id}
+              channelFilter={selectedChannels}
+              onSelectThread={handleThreadSelect}
+              selectedThreadId={selectedThread?.id || null}
             />
           </Grid>
           <Grid item xs={12} md={5}>
-            <ConversationDrawer thread={selectedThread} />
+            <ConversationDrawer 
+              thread={selectedThread} 
+              onClose={handleCloseDrawer}
+            />
           </Grid>
         </Grid>
       </Box>

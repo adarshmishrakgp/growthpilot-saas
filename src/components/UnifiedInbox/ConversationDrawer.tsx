@@ -1,105 +1,76 @@
-import React from 'react';
-import { Drawer, Box, Avatar, Typography, Chip, Divider, Tabs, Tab, Button, IconButton } from '@mui/material';
-
-
-import ActionHistory from './ActionHistory';
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  Avatar,
+  Chip,
+  IconButton,
+  Divider
+} from '@mui/material';
+import { Thread } from './MessageThread';
 import UserProfile from './UserProfile';
-import QuickReplyButtons from './QuickReplyButtons';
+import ActionHistory from './ActionHistory';
 import AISuggestionBox from './AISuggestionBox';
-import PostPreview from './PostPreview';
-import type { Thread } from './MessageThread';
+import MessageBubble from './MessageBubble';
+import QuickReplyButtons from './QuickReplyButtons';
 
-const tags: { [key: string]: { label: string; color: string } } = {
-  lead: { label: 'Lead', color: 'success' },
-  support: { label: 'Support', color: 'info' },
-  spam: { label: 'Spam', color: 'default' },
-  opportunity: { label: 'Opportunity', color: 'warning' }
-};
-
-interface ConversationDrawerProps {
+interface Props {
   thread: Thread | null;
+  onClose: () => void;
 }
 
-const ConversationDrawer: React.FC<ConversationDrawerProps> = ({ thread }) => {
-  const [tab, setTab] = React.useState(0);
-  if (!thread) return null;
+const ConversationDrawer: React.FC<Props> = ({ thread, onClose }) => {
+  const [tab, setTab] = useState(0);
+
+  if (!thread) {
+    return null;
+  }
+
+  const getIntentColor = (intent: string) => {
+    switch (intent.toLowerCase()) {
+      case 'lead':
+        return 'success';
+      case 'opportunity':
+        return 'warning';
+      case 'support':
+        return 'info';
+      default:
+        return 'default';
+    }
+  };
 
   return (
-    <Drawer
-      anchor="right"
-      open={!!thread}
-      variant="persistent"
-      PaperProps={{
-        sx: {
-            marginTop: '100px',
-          width: 400,
-          background: 'rgba(255,255,255,0.95)',
-          borderRadius: '24px 0 0 24px',
-          boxShadow: '0 2px 32px #6366f122',
-          overflow: 'hidden',
-          
-        },
+    <Box
+      sx={{
+        width: '380px',
+        height: '100%',
+        borderLeft: 1,
+        borderColor: 'divider',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.paper'
       }}
     >
-      {/* Fixed Header Section */}
-      <Box sx={{ 
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        background: 'rgba(255,255,255,0.98)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(0,0,0,0.08)',
-        pt: 2,
-        px: 3,
-      }}>
-        {/* User Info Row */}
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 2, 
-          mb: 2,
-          background: 'rgba(255,255,255,0.9)',
-          p: 1.5,
-          borderRadius: 2,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-        }}>
-          <Avatar 
-            src={thread.avatar} 
-            sx={{ 
-              width: 48, 
-              height: 48,
-              border: '2px solid rgba(99,102,241,0.1)'
-            }} 
-          />
-          <Box sx={{ flex: 1 }}>
-            <Typography fontWeight={700} sx={{ color: '#1F2937' }}>{thread.user}</Typography>
-            <Typography variant="body2" sx={{ color: '#6B7280' }}>{thread.channel}</Typography>
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Avatar src={thread.avatar} alt={thread.user} sx={{ width: 48, height: 48 }} />
+          <Box sx={{ ml: 2 }}>
+            <Typography variant="h6">{thread.user}</Typography>
+            <Chip
+              label={thread.intent}
+              size="small"
+              color={getIntentColor(thread.intent)}
+              sx={{ mt: 0.5 }}
+            />
           </Box>
-          <Chip 
-            label={tags[thread.intent]?.label} 
-            color={tags[thread.intent]?.color as any} 
-            size="small"
-          />
         </Box>
-
-      
-
-        {/* Tabs */}
-        <Tabs 
-          value={tab} 
-          onChange={(_, v) => setTab(v)} 
-          sx={{ 
-            '& .MuiTabs-indicator': {
-              height: 3,
-              borderRadius: '3px 3px 0 0'
-            },
-            '& .MuiTab-root': {
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              textTransform: 'none',
-              minHeight: 48
-            }
-          }}
+        
+        <Tabs
+          value={tab}
+          onChange={(_, newValue) => setTab(newValue)}
+          variant="fullWidth"
         >
           <Tab label="Thread" />
           <Tab label="AI Suggestion" />
@@ -107,64 +78,78 @@ const ConversationDrawer: React.FC<ConversationDrawerProps> = ({ thread }) => {
         </Tabs>
       </Box>
 
-      {/* Scrollable Content Section */}
-      <Box sx={{ 
-        height: 'calc(100vh - 180px)', // Adjusted for new header height
-        overflowY: 'auto',
-        p: 3,
-        pt: 2,
-        '&::-webkit-scrollbar': {
-          width: '4px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: '#f1f1f1',
-          borderRadius: '10px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: '#888',
-          borderRadius: '10px',
-        },
-      }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {tab === 0 && (
           <Box>
-            {/* Post Preview with spacing */}
             {thread.originalPost && (
-              <Box sx={{ mb: 3 }}>
-                <PostPreview channel={thread.channel} content={thread.originalPost} />
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Original {thread.originalPost.type}
+                </Typography>
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: 'action.hover',
+                    borderRadius: 1,
+                    mb: 2
+                  }}
+                >
+                  {thread.originalPost.mediaUrl && (
+                    <Box
+                      component="img"
+                      src={thread.originalPost.mediaUrl}
+                      sx={{
+                        width: '100%',
+                        height: 200,
+                        objectFit: 'cover',
+                        borderRadius: 1,
+                        mb: 1
+                      }}
+                    />
+                  )}
+                  <Typography variant="body2">
+                    {thread.originalPost.caption || thread.originalPost.preview}
+                  </Typography>
+                </Box>
               </Box>
             )}
             
-            {/* Message Thread */}
-            {thread.thread && thread.thread.map((msg, i) => (
-              <Box key={i} sx={{ mb: 2 }}>
-                <AISuggestionBox from={msg.from} text={msg.text} time={msg.time} />
-                {msg.attachments && msg.attachments.map((att, idx) => (
-                  <Button
-                    key={idx}
-                    href={att.url}
-                    target="_blank"
-                    variant="contained"
-                    sx={{ mt: 1, mr: 1 }}
-                  >
-                    {att.label}
-                  </Button>
-                ))}
-              </Box>
+            {thread.thread.map((message, index) => (
+              <MessageBubble
+                key={index}
+                message={message}
+                isAI={message.from === 'ai'}
+              />
             ))}
+          </Box>
+        )}
+
+        {tab === 1 && (
+          <Box>
+            <AISuggestionBox
+              from="ai"
+              text={thread.aiSuggested}
+              time="now"
+              onSend={(suggestion) => {
+                // Handle sending the suggestion
+                console.log('Sending suggestion:', suggestion);
+              }}
+            />
             <QuickReplyButtons />
           </Box>
         )}
-        {tab === 1 && (
-          <AISuggestionBox from="ai" text={thread.aiSuggested} time="now" />
-        )}
+
         {tab === 2 && (
-          <>
-            <UserProfile profile={thread.crm || { email: '', lastOrder: '' }} />
-            <ActionHistory actions={thread.crmLog || []} />
-          </>
+          <Box>
+            <UserProfile 
+              profile={thread.crm || { email: '', lastOrder: '' }} 
+            />
+            <Divider sx={{ my: 2 }} />
+            <ActionHistory actions={thread.crmLog} />
+          </Box>
         )}
       </Box>
-    </Drawer>
+    </Box>
   );
 };
 

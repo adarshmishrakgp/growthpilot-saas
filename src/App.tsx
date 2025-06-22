@@ -11,6 +11,11 @@ import LeadGenerator from './components/leads/LeadGenerator';
 import CampaignBuilder from './components/campaigns/CampaignBuilder';
 import { UnifiedInboxLayout } from './components/UnifiedInbox';
 import { MultiChannelCampaign, AIVoiceAgent } from './components/campaigns';
+import OmniProspectorPage from './components/campaigns/OmniProspectorPage';
+import AIAssistantCommercePage from './pages/AIAssistantCommercePage';
+import WorkflowAutomationPage from './pages/WorkflowAutomationPage';
+import SuccessEngine from './components/SuccessEngine/SuccessEngineApp';
+import CRMApp from './components/CRM/CRMApp';
 
 const App: React.FC = () => {
   return (
@@ -24,9 +29,15 @@ const App: React.FC = () => {
             <Route path="/inbox" element={<SmartInbox />} />
             <Route path="/leads" element={<LeadGenerator />} />
             <Route path="/campaigns" element={<CampaignBuilder />} />
-            <Route path="/campaigns/multi-channel" element={<MultiChannelCampaign />} />
-            <Route path="/campaigns/voice-agent" element={<AIVoiceAgent />} />
+            <Route path="/multi-channel" element={<MultiChannelCampaign />} />
+            <Route path="/voice-agent" element={<AIVoiceAgent />} />
             <Route path="/unified-inbox" element={<UnifiedInboxLayout />} />
+            <Route path="/prospector" element={<OmniProspectorPage />} />
+            <Route path="/ai-commerce" element={<AIAssistantCommercePage />} />
+            <Route path="/workflow-automation" element={<WorkflowAutomationPage />} />
+            <Route path="/crm" element={<CRMApp />} />
+            <Route path="/success-engine" element={<SuccessEngine />} />
+
           </Routes>
         </MainLayout>
       </Router>

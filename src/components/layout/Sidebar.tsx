@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate,Link, useLocation } from 'react-router-dom';
 import {
   Box,
   Drawer,
@@ -21,7 +21,9 @@ import {
   PersonSearch as PersonSearchIcon,
   Campaign as CampaignIcon,
   Forum as UnifiedInboxIcon,
+  ShoppingCart,
 } from '@mui/icons-material';
+import SearchIcon from '@mui/icons-material/Search';
 
 const StyledDrawer = styled(Drawer)(({ theme }) => ({
   width: 280,
@@ -57,6 +59,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
     { text: 'Lead Generator', icon: <PersonSearchIcon />, path: '/leads' },
     { text: 'Campaigns', icon: <CampaignIcon />, path: '/campaigns' },
     { text: 'Unified Inbox', icon: <UnifiedInboxIcon />, path: '/unified-inbox' },
+    { text: 'AI Commerce', icon: <ShoppingCart />, path: '/ai-commerce' },
+    { text: 'Workflow Automation', icon: <ShoppingCart />, path: '/workflow-automation' },
+    { text: 'AI Voice Agent', icon: <ShoppingCart />, path: '/voice-agent' },
+    { text: 'Multi-Channel Campaign', icon: <ShoppingCart />, path: '/multi-channel' },
+    { text: 'CRM', icon: <ShoppingCart />, path: '/crm' },
+    { text: 'Success Engine', icon: <ShoppingCart />, path: '/success-engine' },
+   
   ];
 
   return (
@@ -121,6 +130,42 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
             </ListItem>
           </Tooltip>
         ))}
+        <Tooltip
+          title="Prospector"
+          placement="right"
+          arrow
+        >
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => {
+                navigate('/prospector');
+                onClose();
+              }}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'primary.light',
+                  '&:hover': {
+                    backgroundColor: 'primary.light',
+                  },
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: location.pathname === '/prospector' ? 'primary.main' : 'inherit',
+                }}
+              >
+                <SearchIcon />
+              </ListItemIcon>
+              <ListItemText
+                primary="Prospector"
+                primaryTypographyProps={{
+                  fontWeight: location.pathname === '/prospector' ? 'bold' : 'normal',
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+        </Tooltip>
       </List>
     </Drawer>
   );

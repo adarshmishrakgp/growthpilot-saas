@@ -79,6 +79,26 @@ import {
   Template
 } from './data/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+
+interface CampaignStep {
+  id: string;
+  type: 'email' | 'whatsapp' | 'linkedin' | 'sms' | 'tiktok' | 'wait' | 'condition';
+  content?: string;
+  delay?: number;
+  condition?: {
+    type: 'opened' | 'clicked' | 'replied' | 'no_response';
+    value: string;
+  };
+}
+
+interface CampaignStats {
+  sent: number;
+  opened: number;
+  replied: number;
+  meetings: number;
+  converted: number;
+}
 
 const MultiChannelCampaign: React.FC = () => {
   const theme = useTheme();
@@ -122,6 +142,16 @@ const MultiChannelCampaign: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [campaignSteps, setCampaignSteps] = useState<CampaignStep[]>([]);
+  const [campaignStats, setCampaignStats] = useState<CampaignStats>({
+    sent: 0,
+    opened: 0,
+    replied: 0,
+    meetings: 0,
+    converted: 0,
+  });
+  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+  const [selectedStep, setSelectedStep] = useState<CampaignStep | null>(null);
 
   const handleChannelToggle = (channelId: string) => {
     setChannels(channels.map(channel =>
@@ -1017,6 +1047,204 @@ Best,
           >
             Generate AI Content
           </Button>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const items = Array.from(campaignSteps);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setCampaignSteps(items);
+  };
+
+  const generateAIContent = async (step: CampaignStep) => {
+    setIsGeneratingContent(true);
+    try {
+      // Simulate AI content generation
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const content = `Hi {first_name},
+
+I noticed {company} has been making waves in the {industry} space. Your recent work on {recent_project} caught my attention.
+
+{company_research_insight}
+
+Would you be open to a quick chat about how we could help {company} achieve similar results?
+
+Best,
+{sender_name}`;
+
+      setCampaignSteps(steps =>
+        steps.map(s =>
+          s.id === step.id ? { ...s, content } : s
+        )
+      );
+    } finally {
+      setIsGeneratingContent(false);
+    }
+  };
+
+  const renderCampaignBuilder = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+        Campaign Builder 🚀
+      </Typography>
+      
+      <Grid container spacing={3}>
+        <Grid item xs={3}>
+          <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Channels & Actions
+            </Typography>
+            <Stack spacing={2}>
+              <Button
+                startIcon={<EmailIcon />}
+                variant="outlined"
+                fullWidth
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('step_type', 'email');
+                }}
+              >
+                Email
+              </Button>
+              <Button
+                startIcon={<WhatsAppIcon />}
+                variant="outlined"
+                fullWidth
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('step_type', 'whatsapp');
+                }}
+              >
+                WhatsApp
+              </Button>
+              <Button
+                startIcon={<LinkedInIcon />}
+                variant="outlined"
+                fullWidth
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('step_type', 'linkedin');
+                }}
+              >
+                LinkedIn
+              </Button>
+              <Button
+                startIcon={<ScheduleIcon />}
+                variant="outlined"
+                fullWidth
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('step_type', 'wait');
+                }}
+              >
+                Wait
+              </Button>
+              <Button
+                startIcon={<PsychologyIcon />}
+                variant="outlined"
+                fullWidth
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('step_type', 'condition');
+                }}
+              >
+                Condition
+              </Button>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={9}>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="campaign-steps">
+              {(provided) => (
+                <Box
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  sx={{
+                    minHeight: 400,
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    p: 3,
+                    border: '2px dashed',
+                    borderColor: 'divider',
+                  }}
+                >
+                  {campaignSteps.map((step, index) => (
+                    <Draggable key={step.id} draggableId={step.id} index={index}>
+                      {(provided) => (
+                        <Paper
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          sx={{
+                            p: 2,
+                            mb: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            bgcolor: alpha(theme.palette.primary.main, 0.05),
+                            '&:hover': {
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            },
+                          }}
+                        >
+                          {step.type === 'email' && <EmailIcon />}
+                          {step.type === 'whatsapp' && <WhatsAppIcon />}
+                          {step.type === 'linkedin' && <LinkedInIcon />}
+                          {step.type === 'wait' && <ScheduleIcon />}
+                          {step.type === 'condition' && <PsychologyIcon />}
+                          
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                              {step.type.charAt(0).toUpperCase() + step.type.slice(1)}
+                            </Typography>
+                            {step.content && (
+                              <Typography variant="body2" color="text.secondary" noWrap>
+                                {step.content.substring(0, 50)}...
+                              </Typography>
+                            )}
+                          </Box>
+
+                          <Stack direction="row" spacing={1}>
+                            <IconButton
+                              size="small"
+                              onClick={() => generateAIContent(step)}
+                            >
+                              <SmartToy />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => setSelectedStep(step)}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setCampaignSteps(steps =>
+                                  steps.filter(s => s.id !== step.id)
+                                );
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Stack>
+                        </Paper>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </Box>
+              )}
+            </Droppable>
+          </DragDropContext>
         </Grid>
       </Grid>
     </Box>

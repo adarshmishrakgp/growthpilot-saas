@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { List, Typography, Box, Paper } from '@mui/material';
-import MessageThread from './MessageThread';
-import type { Thread } from './MessageThread';
+import MessageThread, { Thread } from './MessageThread';
 
 // Mock data for threads
 const threads: Thread[] = [
   {
     id: '1',
+    author: 'Priya Sharma',
+    text: 'How much is this?',
+    status: 'unread',
     user: 'Priya Sharma',
     avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
     channel: 'Instagram',
@@ -33,6 +35,9 @@ const threads: Thread[] = [
   },
   {
     id: '2',
+    author: 'Rahul Verma',
+    text: 'Do you have size 9 in stock?',
+    status: 'unread',
     user: 'Rahul Verma',
     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
     channel: 'WhatsApp',
@@ -58,6 +63,9 @@ const threads: Thread[] = [
   },
   {
     id: '3',
+    author: 'Maya Singh',
+    text: 'Need more info!',
+    status: 'unread',
     user: 'Maya Singh',
     avatar: 'https://randomuser.me/api/portraits/women/33.jpg',
     channel: 'TikTok',
@@ -84,6 +92,9 @@ const threads: Thread[] = [
   },
   {
     id: '4',
+    author: 'Amit Patel',
+    text: 'I never received my order 😡',
+    status: 'unread',
     user: 'Amit Patel',
     avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
     channel: 'Facebook',
@@ -110,6 +121,9 @@ const threads: Thread[] = [
   },
   {
     id: '5',
+    author: 'Maya Rao',
+    text: 'Do you have a pricing sheet for NGOs?',
+    status: 'unread',
     user: 'Maya Rao',
     avatar: 'https://randomuser.me/api/portraits/women/55.jpg',
     channel: 'Email',
@@ -136,6 +150,9 @@ const threads: Thread[] = [
   },
   {
     id: '6',
+    author: 'Jay Mehta',
+    text: 'Saw your product on TechCrunch — does it work for fintechs?',
+    status: 'unread',
     user: 'Jay Mehta',
     avatar: 'https://randomuser.me/api/portraits/men/54.jpg',
     channel: 'LinkedIn',
@@ -162,6 +179,9 @@ const threads: Thread[] = [
   },
   {
     id: '7',
+    author: 'Sarah Chen',
+    text: 'How do I reset my password?',
+    status: 'unread',
     user: 'Sarah Chen',
     avatar: 'https://randomuser.me/api/portraits/women/22.jpg',
     channel: 'WhatsApp',
@@ -187,6 +207,9 @@ const threads: Thread[] = [
   },
   {
     id: '8',
+    author: 'Alex Thompson',
+    text: 'Check out my new crypto project!',
+    status: 'unread',
     user: 'Alex Thompson',
     avatar: 'https://randomuser.me/api/portraits/men/67.jpg',
     channel: 'Instagram',
@@ -219,57 +242,69 @@ interface Props {
   selectedThreadId: string | null;
 }
 
-const MessageListPanel: React.FC<Props> = ({ channelFilter, onSelectThread, selectedThreadId }) => {
-  const filtered = channelFilter.length
-    ? threads.filter(t => channelFilter.includes(t.channel))
-    : threads;
+const MessageListPanel: React.FC<Props> = ({
+  channelFilter,
+  onSelectThread,
+  selectedThreadId
+}) => {
+  const [messageStatuses, setMessageStatuses] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const socket = new WebSocket('wss://your-websocket-url');
+
+    socket.onmessage = (event) => {
+      const { messageId, status } = JSON.parse(event.data);
+      setMessageStatuses((prevStatuses) => ({
+        ...prevStatuses,
+        [messageId]: status,
+      }));
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
+
+  const filteredThreads = useMemo(() => {
+    return threads.filter(thread => 
+      channelFilter.length === 0 || channelFilter.includes(thread.channel)
+    );
+  }, [channelFilter]);
 
   return (
-    <Paper sx={{ 
-      p: 3,
-      height: '100%',
-      background: 'rgba(255, 255, 255, 0.8)',
-      backdropFilter: 'blur(10px)',
-      borderRadius: 2,
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-    }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: '#1F2937' }}>
+    <Paper 
+      sx={{ 
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        borderRadius: 0
+      }}
+    >
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Typography variant="h6" component="div">
           Inbox
           {channelFilter.length > 0 && (
-            <Typography component="span" variant="body2" sx={{ ml: 1, color: '#6B7280' }}>
+            <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>
               • Filtered by {channelFilter.join(', ')}
             </Typography>
           )}
         </Typography>
-        <Typography variant="body2" sx={{ color: '#6B7280' }}>
-          {filtered.length} conversations
+        <Typography variant="body2" color="text.secondary">
+          {filteredThreads.length} conversations
         </Typography>
       </Box>
-      <List sx={{ 
-        maxHeight: 'calc(100vh - 250px)',
-        overflowY: 'auto',
-        '&::-webkit-scrollbar': {
-          width: '4px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: '#f1f1f1',
-          borderRadius: '10px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: '#888',
-          borderRadius: '10px',
-        },
-      }}>
-        {filtered.map(thread => (
+      
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        {filteredThreads.map((thread) => (
           <MessageThread
             key={thread.id}
             thread={thread}
-            selected={selectedThreadId === thread.id}
+            selected={thread.id === selectedThreadId}
             onClick={() => onSelectThread(thread)}
           />
         ))}
-      </List>
+      </Box>
     </Paper>
   );
 };

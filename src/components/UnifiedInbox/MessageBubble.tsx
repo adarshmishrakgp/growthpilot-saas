@@ -1,31 +1,66 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 
-interface Props {
-  from: 'user' | 'ai' | 'agent';
-  text: string;
-  time: string;
+interface MessageProps {
+  message: {
+    from: 'user' | 'ai';
+    text: string;
+    time: string;
+    attachments?: Array<{
+      type: string;
+      url: string;
+      label: string;
+    }>;
+  };
+  isAI: boolean;
 }
 
-const MessageBubble: React.FC<Props> = ({ from, text, time }) => (
-  <Box sx={{
-    mb: 1,
-    textAlign: from === 'user' ? 'left' : 'right'
-  }}>
-    <Typography
+const MessageBubble: React.FC<MessageProps> = ({ message, isAI }) => {
+  return (
+    <Box
       sx={{
-        display: 'inline-block',
-        px: 2, py: 1,
-        borderRadius: 2,
-        background: from === 'user' ? '#f3f4f6' : 'linear-gradient(90deg,#6366f1,#fbbf24)',
-        color: from === 'user' ? '#222' : '#fff',
-        fontWeight: 500
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: isAI ? 'flex-start' : 'flex-end',
+        mb: 2,
       }}
     >
-      {text}
-    </Typography>
-    <Typography variant="caption" sx={{ ml: 1 }}>{time}</Typography>
-  </Box>
-);
+      <Box
+        sx={{
+          maxWidth: '80%',
+          p: 2,
+          bgcolor: isAI ? 'primary.light' : 'secondary.light',
+          borderRadius: 2,
+          color: isAI ? 'primary.contrastText' : 'secondary.contrastText',
+        }}
+      >
+        <Typography variant="body1">{message.text}</Typography>
+        {message.attachments && message.attachments.length > 0 && (
+          <Box sx={{ mt: 1 }}>
+            {message.attachments.map((attachment, index) => (
+              <Button
+                key={index}
+                href={attachment.url}
+                target="_blank"
+                variant="contained"
+                size="small"
+                sx={{ mr: 1, mt: 1 }}
+              >
+                {attachment.label}
+              </Button>
+            ))}
+          </Box>
+        )}
+      </Box>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ mt: 0.5, px: 1 }}
+      >
+        {message.time}
+      </Typography>
+    </Box>
+  );
+};
 
 export default MessageBubble;

@@ -18,10 +18,10 @@ const channels = [
 
 interface Props {
   selectedChannels: string[];
-  onChange: (channels: string[]) => void;
+  onChannelToggle: (channel: string) => void;
 }
 
-const ChannelFilterSidebar: React.FC<Props> = ({ selectedChannels, onChange }) => (
+const ChannelFilterSidebar: React.FC<Props> = ({ selectedChannels, onChannelToggle }) => (
   <Box sx={{ 
     display: 'flex', 
     flexDirection: 'column', 
@@ -45,7 +45,7 @@ const ChannelFilterSidebar: React.FC<Props> = ({ selectedChannels, onChange }) =
           key={ch.label}
           variant={selectedChannels.includes(ch.label) ? "contained" : "outlined"}
           startIcon={ch.icon}
-          onClick={() => onChange([ch.label])} // Only select one channel at a time
+          onClick={() => onChannelToggle(ch.label)}
           fullWidth
           sx={{
             justifyContent: 'flex-start',

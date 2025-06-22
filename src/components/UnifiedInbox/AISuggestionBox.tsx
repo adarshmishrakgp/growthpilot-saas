@@ -12,6 +12,7 @@ interface AISuggestionBoxProps {
   time: string;
   confidence?: number;
   alternatives?: string[];
+  onSend: (suggestion: string) => void;
 }
 
 const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({ 
@@ -19,11 +20,14 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
   text, 
   time, 
   confidence = 0.95,
-  alternatives = []
+  alternatives = [],
+  onSend
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState(text);
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedTone, setSelectedTone] = useState('friendly');
 
   const handleRegenerateResponse = () => {
     setIsGenerating(true);
@@ -31,6 +35,23 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     setTimeout(() => {
       setIsGenerating(false);
     }, 1500);
+  };
+
+  const fetchSuggestions = async (message: string) => {
+    // Simulate fetching suggestions from a GPT model
+    const response = await fetch('/api/gpt-suggestions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message, tone: selectedTone }),
+    });
+    const data = await response.json();
+    setSuggestions(data.suggestions);
+  };
+
+  const handleToneChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedTone(event.target.value);
   };
 
   return (
@@ -160,6 +181,23 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
           ))}
         </Box>
       )}
+
+      <div className="tone-selector">
+        <label htmlFor="tone">Select Tone:</label>
+        <select id="tone" value={selectedTone} onChange={handleToneChange}>
+          <option value="friendly">Friendly</option>
+          <option value="formal">Formal</option>
+          <option value="concise">Concise</option>
+        </select>
+      </div>
+
+      <div className="suggestions">
+        {suggestions.map((suggestion, index) => (
+          <div key={index} className="suggestion" onClick={() => onSend(suggestion)}>
+            {suggestion}
+          </div>
+        ))}
+      </div>
     </Box>
   );
 };

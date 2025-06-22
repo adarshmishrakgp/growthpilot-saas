@@ -1,8 +1,9 @@
 import React from 'react';
-import { ListItem, ListItemAvatar, Avatar, ListItemText, Chip, Badge, Box, Typography } from '@mui/material';
+import { Box, Typography, Avatar, Chip } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 export interface PostContent {
-  type: 'image' | 'video' | 'text' | 'email';
+  type: 'email' | 'image' | 'text' | 'video';
   mediaUrl?: string;
   caption?: string;
   subject?: string;
@@ -12,21 +13,19 @@ export interface PostContent {
 
 export interface Thread {
   id: string;
+  author: string;
+  text: string;
+  status: string;
   user: string;
-  avatar: string;
   channel: string;
-  intent: 'lead' | 'support' | 'spam' | 'opportunity';
+  avatar: string;
+  intent: string;
   lastMessage: string;
   time: string;
-  unread?: boolean;
+  unread: boolean;
   aiSuggested: string;
   crmLog: string[];
   originalPost?: PostContent;
-  crm?: {
-    email: string;
-    lastOrder: string;
-    [key: string]: any;
-  };
   thread: {
     from: 'user' | 'ai';
     text: string;
@@ -37,55 +36,97 @@ export interface Thread {
       label: string;
     }>;
   }[];
+  crm?: {
+    email: string;
+    lastOrder: string;
+    [key: string]: any;
+  };
 }
 
-const intentConfig: { [key: string]: { label: string; color: string } } = {
-  lead: { label: 'Lead', color: 'success' },
-  support: { label: 'Support', color: 'info' },
-  spam: { label: 'Spam', color: 'default' },
-  opportunity: { label: 'Opportunity', color: 'warning' }
-};
+const ThreadContainer = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(1.5),
+  cursor: 'pointer',
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+  display: 'flex',
+  alignItems: 'center',
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
 
-interface Props {
+const ThreadContent = styled(Box)({
+  marginLeft: '12px',
+  flex: 1,
+  overflow: 'hidden',
+});
+
+const ThreadHeader = styled(Box)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '4px',
+});
+
+interface MessageThreadProps {
   thread: Thread;
-  selected: boolean;
-  onClick: () => void;
+  selected?: boolean;
+  onClick?: () => void;
 }
 
-const MessageThread: React.FC<Props> = ({ thread, selected, onClick }) => (
-  <ListItem
-    button
-    selected={selected}
-    onClick={onClick}
-    sx={{
-      borderRadius: 2,
-      mb: 1,
-      background: selected ? 'rgba(99,102,241,0.08)' : 'transparent'
-    }}
-  >
-    <ListItemAvatar>
-      <Badge color="error" variant="dot" invisible={!thread.unread}>
-        <Avatar src={thread.avatar} />
-      </Badge>
-    </ListItemAvatar>
-    <ListItemText
-      primary={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography sx={{ fontWeight: 700 }}>{thread.user}</Typography>
-          <Chip 
-            label={intentConfig[thread.intent].label} 
-            color={intentConfig[thread.intent].color as any} 
-            size="small" 
-          />
-        </Box>
-      }
-      secondary={
-        <Typography variant="body2" color="text.secondary">
-          {thread.lastMessage} • {thread.time}
+const MessageThread: React.FC<MessageThreadProps> = ({ 
+  thread,
+  selected = false,
+  onClick
+}) => {
+  const getIntentColor = (intent: string) => {
+    switch (intent.toLowerCase()) {
+      case 'lead':
+        return 'success';
+      case 'opportunity':
+        return 'warning';
+      case 'support':
+        return 'info';
+      default:
+        return 'default';
+    }
+  };
+
+  return (
+    <ThreadContainer
+      onClick={onClick}
+      sx={{
+        backgroundColor: selected ? 'action.selected' : 'background.paper',
+      }}
+    >
+      <Avatar src={thread.avatar} alt={thread.user} />
+      <ThreadContent>
+        <ThreadHeader>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="subtitle2" noWrap>
+              {thread.user}
+            </Typography>
+            <Chip
+              label={thread.intent}
+              size="small"
+              color={getIntentColor(thread.intent)}
+              sx={{ height: 20 }}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            {thread.time}
+          </Typography>
+        </ThreadHeader>
+        <Typography
+          variant="body2"
+          color={thread.unread ? 'text.primary' : 'text.secondary'}
+          noWrap
+          sx={{ fontWeight: thread.unread ? 600 : 400 }}
+        >
+          {thread.lastMessage}
         </Typography>
-      }
-    />
-  </ListItem>
-);
+      </ThreadContent>
+    </ThreadContainer>
+  );
+};
 
 export default MessageThread;
