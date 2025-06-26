@@ -5,22 +5,28 @@ import {
   Typography,
   IconButton,
   InputBase,
-  Badge,
-  Menu,
-  MenuItem,
   Avatar,
   Box,
   Tooltip,
   ListItemIcon,
+  Menu,
+  MenuItem,
+  Drawer,
+  Divider
 } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 import {
-  Notifications as NotificationsIcon,
   Search as SearchIcon,
   Menu as MenuIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import Settings from '../../pages/Settings';
+
+const APP_BAR_HEIGHT = 64; // px, adjust if your AppBar is a different height
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   zIndex: theme.zIndex.drawer + 1,
@@ -69,109 +75,128 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
+const DrawerHeader = styled(Box)(({ theme }) => ({
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
+  background: theme.palette.background.paper,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: theme.spacing(2, 2, 1, 2),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  minHeight: APP_BAR_HEIGHT,
+}));
+
 interface TopBarProps {
   onMenuClick: () => void;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
-  };
-
-  const handleNotificationsMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setNotificationsAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
 
-  const handleNotificationsMenuClose = () => {
-    setNotificationsAnchorEl(null);
+  const handleSettings = () => {
+    setSettingsOpen(true);
+    handleMenuClose();
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    handleMenuClose();
   };
 
   return (
-    <StyledAppBar position="fixed">
-      <Toolbar>
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          onClick={onMenuClick}
-          edge="start"
-          sx={{ mr: 2 }}
-        >
-          <MenuIcon />
-        </IconButton>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 0, display: { xs: 'none', sm: 'block' } }}>
-          GrowthPilot
-        </Typography>
-        <Search>
-          <SearchIconWrapper>
-            <SearchIcon />
-          </SearchIconWrapper>
-          <StyledInputBase
-            placeholder="Search..."
-            inputProps={{ 'aria-label': 'search' }}
-          />
-        </Search>
-        <Box sx={{ flexGrow: 1 }} />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title="Notifications">
-            <IconButton color="inherit" onClick={handleNotificationsMenuOpen}>
-              <Badge badgeContent={4} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Account settings">
-            <IconButton
-              onClick={handleProfileMenuOpen}
-              size="small"
-              sx={{ ml: 2 }}
-            >
-              <Avatar sx={{ width: 32, height: 32 }} src="https://i.pravatar.cc/150?img=1" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-          onClick={handleMenuClose}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          <MenuItem>
-            <ListItemIcon>
-              <SettingsIcon fontSize="small" />
-            </ListItemIcon>
+    <>
+      <StyledAppBar position="fixed">
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={onMenuClick}
+            edge="start"
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 0, display: { xs: 'none', sm: 'block' } }}>
+            GrowthPilot
+          </Typography>
+          <Search>
+            <SearchIconWrapper>
+              <SearchIcon />
+            </SearchIconWrapper>
+            <StyledInputBase
+              placeholder="Search..."
+              inputProps={{ 'aria-label': 'search' }}
+            />
+          </Search>
+          <Box sx={{ flexGrow: 1 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip title="Account settings">
+              <IconButton
+                onClick={handleProfileMenuOpen}
+                size="small"
+                sx={{ ml: 2 }}
+              >
+                <Avatar sx={{ width: 32, height: 32 }} src="https://i.pravatar.cc/150?img=1" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            onClick={handleMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <MenuItem onClick={handleSettings}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              Settings
+            </MenuItem>
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              Logout
+            </MenuItem>
+          </Menu>
+        </Toolbar>
+      </StyledAppBar>
+      <Drawer
+        anchor="right"
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        PaperProps={{ sx: { width: '30vw', minWidth: 320, maxWidth: 480, pt: `${APP_BAR_HEIGHT}px`, boxSizing: 'border-box' } }}
+      >
+        <DrawerHeader>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
             Settings
-          </MenuItem>
-          <MenuItem>
-            <ListItemIcon>
-              <LogoutIcon fontSize="small" />
-            </ListItemIcon>
-            Logout
-          </MenuItem>
-        </Menu>
-        <Menu
-          anchorEl={notificationsAnchorEl}
-          open={Boolean(notificationsAnchorEl)}
-          onClose={handleNotificationsMenuClose}
-          onClick={handleNotificationsMenuClose}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          <MenuItem>New message from John</MenuItem>
-          <MenuItem>Workflow task completed</MenuItem>
-          <MenuItem>New lead assigned to you</MenuItem>
-          <MenuItem>System update available</MenuItem>
-        </Menu>
-      </Toolbar>
-    </StyledAppBar>
+          </Typography>
+          <IconButton aria-label="Close settings" onClick={() => setSettingsOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </DrawerHeader>
+        <Divider />
+        <Box sx={{ height: '100%', overflowY: 'auto', p: 3, pt: 2 }}>
+          <Settings />
+        </Box>
+      </Drawer>
+    </>
   );
 };
 

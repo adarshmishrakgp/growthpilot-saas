@@ -11,6 +11,10 @@ interface AISuggestionBoxProps {
   text: string;
   time: string;
   confidence?: number;
+  conversionProbability?: number; // 0-1
+  conversionTips?: string[];
+  avoidTips?: string[];
+  churnTips?: string[];
   alternatives?: string[];
   onSend: (suggestion: string) => void;
 }
@@ -20,38 +24,49 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
   text, 
   time, 
   confidence = 0.95,
+  conversionProbability = 0.78,
+  conversionTips = [
+    'Personalize your response with the user\'s name.',
+    'Offer a limited-time incentive.',
+    'Ask a direct question to prompt a reply.'
+  ],
+  avoidTips = [
+    'Don\'t ignore the user\'s main question.',
+    'Avoid sounding too pushy or salesy.',
+    'Don\'t use jargon or technical terms.'
+  ],
+  churnTips = [
+    'Follow up if the user doesn\'t reply in 2 days.',
+    'Offer support proactively if user seems confused.',
+    'Thank the user for their interest.'
+  ],
   alternatives = [],
   onSend
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState(text);
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedTone, setSelectedTone] = useState('friendly');
 
   const handleRegenerateResponse = () => {
     setIsGenerating(true);
-    // Simulate API call to GPT-4
     setTimeout(() => {
       setIsGenerating(false);
     }, 1500);
   };
 
-  const fetchSuggestions = async (message: string) => {
-    // Simulate fetching suggestions from a GPT model
-    const response = await fetch('/api/gpt-suggestions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message, tone: selectedTone }),
-    });
-    const data = await response.json();
-    setSuggestions(data.suggestions);
-  };
-
   const handleToneChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTone(event.target.value);
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setSelectedResponse(e.target.value);
+  };
+
+  const handleSend = () => {
+    onSend(selectedResponse);
+    setIsEditing(false);
   };
 
   return (
@@ -98,22 +113,50 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
         </Typography>
         <Typography 
           variant="caption" 
-          sx={{ 
-            ml: 1,
-            color: '#6B7280'
-          }}
+          sx={{ ml: 1, color: '#6B7280' }}
         >
           {time}
         </Typography>
       </Box>
 
-      <Typography variant="body1" sx={{ color: '#1F2937', whiteSpace: 'pre-wrap' }}>
-        {selectedResponse}
-      </Typography>
+      {/* Conversion Probability */}
+      {from === 'ai' && (
+        <Box sx={{ mb: 1 }}>
+          <Chip
+            label={`AI estimates ${Math.round(conversionProbability * 100)}% chance of conversion`}
+            size="small"
+            sx={{ background: '#e0e7ff', color: '#234567', fontWeight: 700 }}
+          />
+        </Box>
+      )}
 
+      {/* Editable AI Message */}
+      {isEditing ? (
+        <textarea
+          value={selectedResponse}
+          onChange={handleEditChange}
+          style={{ width: '100%', minHeight: 60, fontSize: 16, padding: 8, borderRadius: 6, border: '1px solid #e0e7ff', marginBottom: 8 }}
+        />
+      ) : (
+        <Typography variant="body1" sx={{ color: '#1F2937', whiteSpace: 'pre-wrap' }}>
+          {selectedResponse}
+        </Typography>
+      )}
+
+      {/* Tone Selector */}
+      <Box sx={{ mt: 2, mb: 1 }}>
+        <label htmlFor="tone" style={{ fontWeight: 600, color: '#6366F1', marginRight: 8 }}>Select Tone:</label>
+        <select id="tone" value={selectedTone} onChange={handleToneChange} style={{ fontWeight: 600, borderRadius: 4, padding: '2px 8px' }}>
+          <option value="friendly">Friendly</option>
+          <option value="formal">Formal</option>
+          <option value="concise">Concise</option>
+        </select>
+      </Box>
+
+      {/* Approve/Send, Edit, Regenerate, Reject Buttons */}
       {from === 'ai' && (
         <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-          <Tooltip title="Edit Response">
+          <Tooltip title={isEditing ? 'Save' : 'Edit Response'}>
             <IconButton 
               size="small" 
               onClick={() => setIsEditing(!isEditing)}
@@ -140,6 +183,7 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
             <IconButton 
               size="small"
               sx={{ color: '#10B981' }}
+              onClick={handleSend}
             >
               <CheckCircleIcon fontSize="small" />
             </IconButton>
@@ -148,6 +192,7 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
             <IconButton 
               size="small"
               sx={{ color: '#EF4444' }}
+              onClick={() => setIsEditing(false)}
             >
               <BlockIcon fontSize="small" />
             </IconButton>
@@ -155,6 +200,43 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
         </Box>
       )}
 
+      {/* Conversion Tips */}
+      {from === 'ai' && conversionTips.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" sx={{ color: '#6366F1', fontWeight: 700, mb: 0.5 }}>AI Tips to Increase Conversion:</Typography>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            {conversionTips.map((tip, idx) => (
+              <li key={idx} style={{ color: '#234567', fontSize: 15 }}>{tip}</li>
+            ))}
+          </ul>
+        </Box>
+      )}
+
+      {/* Avoid Tips */}
+      {from === 'ai' && avoidTips.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" sx={{ color: '#EF4444', fontWeight: 700, mb: 0.5 }}>What to Avoid:</Typography>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            {avoidTips.map((tip, idx) => (
+              <li key={idx} style={{ color: '#EF4444', fontSize: 15 }}>{tip}</li>
+            ))}
+          </ul>
+        </Box>
+      )}
+
+      {/* Churn Tips */}
+      {from === 'ai' && churnTips.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" sx={{ color: '#00B8A9', fontWeight: 700, mb: 0.5 }}>Churn Avoidance Tips:</Typography>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            {churnTips.map((tip, idx) => (
+              <li key={idx} style={{ color: '#00B8A9', fontSize: 15 }}>{tip}</li>
+            ))}
+          </ul>
+        </Box>
+      )}
+
+      {/* Alternatives */}
       {from === 'ai' && alternatives.length > 0 && (
         <Box sx={{ mt: 2 }}>
           <Typography variant="caption" sx={{ color: '#6B7280', display: 'block', mb: 1 }}>
@@ -181,23 +263,6 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
           ))}
         </Box>
       )}
-
-      <div className="tone-selector">
-        <label htmlFor="tone">Select Tone:</label>
-        <select id="tone" value={selectedTone} onChange={handleToneChange}>
-          <option value="friendly">Friendly</option>
-          <option value="formal">Formal</option>
-          <option value="concise">Concise</option>
-        </select>
-      </div>
-
-      <div className="suggestions">
-        {suggestions.map((suggestion, index) => (
-          <div key={index} className="suggestion" onClick={() => onSend(suggestion)}>
-            {suggestion}
-          </div>
-        ))}
-      </div>
     </Box>
   );
 };

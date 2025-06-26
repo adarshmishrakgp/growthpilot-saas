@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Box, Grid, Paper, Typography, TextField, Button, Avatar, Chip, Card, CardContent, CardActions, IconButton, Divider, Tabs, Tab, Snackbar, Alert, CircularProgress, InputAdornment, Badge, Drawer, List, ListItem, ListItemIcon, ListItemText, Collapse, Switch, FormControlLabel, Menu, MenuItem, Tooltip, LinearProgress, Slide
+  Box, Grid, Paper, Typography, TextField, Button, Avatar, Chip, Card, CardContent, CardActions, IconButton, Divider, Tabs, Tab, Snackbar, Alert, CircularProgress, InputAdornment, Badge, Drawer, List, ListItem, ListItemIcon, ListItemText, Collapse, Switch, FormControlLabel, Menu, MenuItem, Tooltip, LinearProgress, Slide, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, OutlinedInput, Checkbox
 } from '@mui/material';
 import { WhatsApp, Instagram, ShoppingCart, Search, Add, Edit, Delete, CheckCircle, LocalOffer, Star, StarBorder, ArrowForward, ArrowBack, ExpandMore, Close, Store, Category, FilterList, Payment, LocalShipping, Done, Warning, Favorite, FavoriteBorder, Info, EmojiObjects, Replay, MoreVert, Home, Person, Settings, Inventory, History, ShoppingBag, FlashOn, Bolt, TrendingUp, AttachMoney, Visibility, Save, ShoppingBasket, EmojiEmotions, EmojiEvents, EmojiFoodBeverage, EmojiNature, EmojiTransportation, EmojiPeople, EmojiSymbols } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface Product {
   id: string;
   name: string;
-  image: string;
+  images: { color: string; urls: string[] }[];
   price: number;
   tags: string[];
   category: string;
@@ -18,6 +18,7 @@ interface Product {
   size: string[];
   stock: number;
   description: string;
+  longDescription: string;
   isNew?: boolean;
   isTrending?: boolean;
 }
@@ -50,7 +51,16 @@ const mockProducts: Product[] = [
   {
     id: 'p1',
     name: 'White Sneakers',
-    image: 'https://images.unsplash.com/photo-1517260911205-8c1e1a1b6b8c?auto=format&fit=crop&w=400&q=80',
+    images: [
+      { color: 'White', urls: [
+        'https://images.unsplash.com/photo-1517260911205-8c1e1a1b6b8c?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1517260911205-8c1e1a1b6b8c?auto=format&fit=crop&w=400&q=90',
+      ] },
+      { color: 'Black', urls: [
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=90',
+      ] },
+    ],
     price: 89,
     tags: ['shoes', 'white', 'sneakers', 'trending'],
     category: 'Shoes',
@@ -58,12 +68,18 @@ const mockProducts: Product[] = [
     size: ['6', '7', '8', '9', '10', '11'],
     stock: 2,
     description: 'Crisp, clean, and ultra-comfy. The perfect white sneaker for any fit.',
+    longDescription: 'Our White Sneakers are crafted with premium vegan leather, featuring a cushioned insole and a lightweight, flexible sole for all-day comfort. Available in both White and Black, these sneakers are perfect for any occasion—whether you\'re heading to class, the gym, or a night out. Breathable lining keeps your feet cool, while the minimalist design pairs effortlessly with any outfit. Machine washable and built to last. Loved by Gen-Z trendsetters everywhere!',
     isTrending: true,
   },
   {
     id: 'p2',
     name: 'Classic Black Hoodie',
-    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80',
+    images: [
+      { color: 'Black', urls: [
+        'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=90',
+      ] },
+    ],
     price: 59,
     tags: ['hoodie', 'black', 'apparel', 'cozy'],
     category: 'Apparel',
@@ -71,12 +87,18 @@ const mockProducts: Product[] = [
     size: ['S', 'M', 'L', 'XL'],
     stock: 8,
     description: 'Stay cozy and cool with this classic black hoodie. Soft fleece, Gen-Z approved.',
+    longDescription: 'This classic black hoodie is made from soft fleece material, perfect for keeping you cozy and cool. It is designed with a comfortable fit and a stylish look. Great for any casual occasion.',
     isNew: true,
   },
   {
     id: 'p3',
     name: 'Pastel Crew Socks (3-pack)',
-    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80',
+    images: [
+      { color: 'Multi', urls: [
+        'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=90',
+      ] },
+    ],
     price: 19,
     tags: ['socks', 'pastel', 'bundle', 'accessory'],
     category: 'Accessories',
@@ -84,11 +106,17 @@ const mockProducts: Product[] = [
     size: ['One Size'],
     stock: 12,
     description: 'Bundle up! 3 pairs of pastel crew socks for the perfect fit.',
+    longDescription: 'These pastel crew socks are perfect for any casual outfit. They are made from soft and comfortable material, ensuring a perfect fit for any occasion.',
   },
   {
     id: 'p4',
     name: 'Lilac Mini Bag',
-    image: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=400&q=80',
+    images: [
+      { color: 'Lilac', urls: [
+        'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=400&q=90',
+      ] },
+    ],
     price: 39,
     tags: ['bag', 'lilac', 'accessory', 'trending'],
     category: 'Accessories',
@@ -96,12 +124,18 @@ const mockProducts: Product[] = [
     size: ['One Size'],
     stock: 4,
     description: 'Statement mini bag in trending lilac. Fits your phone, gloss, and vibes.',
+    longDescription: 'This lilac mini bag is perfect for carrying your essentials. It features a trendy design and is made from high-quality materials. Great for any casual occasion.',
     isTrending: true,
   },
   {
     id: 'p5',
     name: 'Denim Bucket Hat',
-    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+    images: [
+      { color: 'Blue', urls: [
+        'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=90',
+      ] },
+    ],
     price: 25,
     tags: ['hat', 'denim', 'accessory', 'summer'],
     category: 'Accessories',
@@ -109,11 +143,17 @@ const mockProducts: Product[] = [
     size: ['One Size'],
     stock: 6,
     description: 'Denim bucket hat for sunny days and TikTok fits.',
+    longDescription: 'This denim bucket hat is perfect for sunny days and TikTok fits. It features a trendy design and is made from high-quality materials. Great for any casual occasion.',
   },
   {
     id: 'p6',
     name: 'Chunky Platform Sandals',
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    images: [
+      { color: 'Black', urls: [
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=90',
+      ] },
+    ],
     price: 69,
     tags: ['sandals', 'platform', 'shoes', 'summer'],
     category: 'Shoes',
@@ -121,11 +161,17 @@ const mockProducts: Product[] = [
     size: ['6', '7', '8', '9', '10'],
     stock: 3,
     description: 'Chunky platform sandals for max height and max style.',
+    longDescription: 'These chunky platform sandals are perfect for max height and max style. They are made from high-quality materials and are designed with a comfortable fit. Great for any casual occasion.',
   },
   {
     id: 'p7',
     name: 'Tie-Dye Tee',
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+    images: [
+      { color: 'Multi', urls: [
+        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=90',
+      ] },
+    ],
     price: 29,
     tags: ['tee', 'tie-dye', 'apparel', 'colorful'],
     category: 'Apparel',
@@ -133,11 +179,17 @@ const mockProducts: Product[] = [
     size: ['S', 'M', 'L', 'XL'],
     stock: 10,
     description: 'Tie-dye tee for that retro Gen-Z energy.',
+    longDescription: 'This tie-dye tee is perfect for that retro Gen-Z energy. It features a colorful design and is made from high-quality materials. Great for any casual occasion.',
   },
   {
     id: 'p8',
     name: 'Neon Green Beanie',
-    image: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+    images: [
+      { color: 'Neon Green', urls: [
+        'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=90',
+      ] },
+    ],
     price: 15,
     tags: ['beanie', 'neon', 'accessory', 'winter'],
     category: 'Accessories',
@@ -145,6 +197,7 @@ const mockProducts: Product[] = [
     size: ['One Size'],
     stock: 1,
     description: 'Neon green beanie for max visibility and max vibes. Only 1 left!',
+    longDescription: 'This neon green beanie is perfect for max visibility and max vibes. It features a bright color and is made from high-quality materials. Great for any casual occasion.'
   },
 ];
 
@@ -261,6 +314,29 @@ const AIAssistantCommercePage: React.FC = () => {
   const [typing, setTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [previewAIResponse, setPreviewAIResponse] = useState('');
+  const [adminTab, setAdminTab] = useState(0);
+  const [addProductOpen, setAddProductOpen] = useState(false);
+  const [newProduct, setNewProduct] = useState<{
+    name: string;
+    description: string;
+    sizes: string[];
+    gender: string;
+    images: string[];
+    price: string;
+  }>({
+    name: '',
+    description: '',
+    sizes: [],
+    gender: '',
+    images: [''],
+    price: '',
+  });
+  const [addProductError, setAddProductError] = useState('');
+  const [productDetailOpen, setProductDetailOpen] = useState(false);
+  const [productDetail, setProductDetail] = useState<Product | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
 
   // --- Helper Functions ---
   const scrollToBottom = () => {
@@ -273,7 +349,19 @@ const AIAssistantCommercePage: React.FC = () => {
     scrollToBottom();
   }, [chat, typing]);
 
-  // ... (rest of the main component: chat handler, product discovery, AI response simulation, product carousel, order tracker, admin, inventory, etc.)
+  // --- AI Inventory Suggestions ---
+  const trendingProducts = products.filter(p => p.isTrending);
+  const lowStockProducts = products.filter(p => p.stock <= 2);
+  const neverBoughtProducts = products.filter(p => p.stock > 0 && !p.isTrending && p.stock === p.stock); // Mock: all non-trending
+  const slowMovingProducts = products.filter(p => p.stock > 5 && !p.isTrending);
+
+  const aiInventorySuggestions = [
+    trendingProducts.length > 0 && `Increase inventory for trending products: ${trendingProducts.map(p => p.name).join(', ')}. These are liked and seen by more customers!`,
+    lowStockProducts.length > 0 && `Restock soon: ${lowStockProducts.map(p => p.name).join(', ')}. These are running out fast!`,
+    slowMovingProducts.length > 0 && `Reduce inventory for slow-moving products: ${slowMovingProducts.map(p => p.name).join(', ')}. These are not being bought or seen much.`,
+    'Consider running a sale or bundle on slow-moving items to boost engagement and clear inventory.',
+    'Use customer feedback to introduce new colors/styles for bestsellers.'
+  ].filter(Boolean);
 
   // Handler: Send message in chat
   const handleSend = (msg: string) => {
@@ -415,22 +503,33 @@ const AIAssistantCommercePage: React.FC = () => {
   };
 
   // Handler: Add product (admin, mock)
-  const handleAddProduct = () => {
-    const newProduct: Product = {
+  const handleAddProduct = () => setAddProductOpen(true);
+  const handleAddProductClose = () => {
+    setAddProductOpen(false);
+    setNewProduct({ name: '', description: '', sizes: [], gender: '', images: [''], price: '' });
+    setAddProductError('');
+  };
+  const handleAddProductSubmit = () => {
+    if (!newProduct.name || !newProduct.description || !newProduct.sizes.length || !newProduct.gender || !newProduct.images[0] || !newProduct.price) {
+      setAddProductError('Please fill all fields.');
+      return;
+    }
+    const product: Product = {
       id: uuidv4(),
-      name: 'New Gen-Z Tee',
-      image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-      price: 35,
-      tags: ['tee', 'new', 'gen-z'],
-      category: 'Apparel',
-      color: 'Multi',
-      size: ['S', 'M', 'L', 'XL'],
-      stock: 7,
-      description: 'A fresh tee for your next TikTok.',
-      isNew: true,
+      name: newProduct.name,
+      description: newProduct.description,
+      size: newProduct.sizes,
+      category: newProduct.gender,
+      images: newProduct.images.map(img => ({ color: '', urls: [img] })),
+      price: Number(newProduct.price),
+      tags: [],
+      color: '',
+      stock: 10,
+      longDescription: '',
     };
-    setProducts(prev => [newProduct, ...prev]);
+    setProducts(prev => [product, ...prev]);
     setSnackbar({ open: true, message: 'Product added!', severity: 'success' });
+    handleAddProductClose();
   };
 
   // Handler: Preview AI (admin)
@@ -440,6 +539,9 @@ const AIAssistantCommercePage: React.FC = () => {
       setPreviewAIResponse(simulateAIResponse(msg).text);
     }, 800);
   };
+
+  const genderOptions = ['Men', 'Women', 'Unisex', 'Kids'];
+  const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '6', '7', '8', '9', '10', '11', 'One Size'];
 
   return (
     <Box sx={{ minHeight: '100vh', background: 'linear-gradient(135deg, #e0e7ff 0%, #f0fdfa 100%)', fontFamily: 'Manrope, Inter, sans-serif', p: { xs: 1, md: 4 } }}>
@@ -485,7 +587,7 @@ const AIAssistantCommercePage: React.FC = () => {
                           return p ? (
                             <Chip
                               key={p.id}
-                              avatar={<Avatar src={p.image} />}
+                              avatar={<Avatar src={p.images[0].urls[0]} />}
                               label={p.name}
                               sx={{ bgcolor: '#fbbf24', color: '#222', fontWeight: 700 }}
                             />
@@ -590,7 +692,7 @@ const AIAssistantCommercePage: React.FC = () => {
                           color="secondary"
                           sx={{ position: 'absolute', top: 8, right: 8 }}
                         >
-                          <Avatar src={product.image} sx={{ width: 72, height: 72, mb: 1, mx: 'auto', border: '2px solid #6366f1' }} />
+                          <Avatar src={product.images[0].urls[0]} sx={{ width: 72, height: 72, mb: 1, mx: 'auto', border: '2px solid #6366f1' }} />
                         </Badge>
                         <Typography fontWeight={700} fontSize={17} sx={{ mb: 0.5 }}>{product.name}</Typography>
                         <Typography fontSize={15} color="#6366f1" fontWeight={600}>${product.price}</Typography>
@@ -636,7 +738,7 @@ const AIAssistantCommercePage: React.FC = () => {
                 return p ? (
                   <Chip
                     key={p.id}
-                    avatar={<Avatar src={p.image} />}
+                    avatar={<Avatar src={p.images[0].urls[0]} />}
                     label={p.name}
                     onDelete={() => handleUnsave(p.id)}
                     sx={{ bgcolor: '#e0e7ff', color: '#6366f1', fontWeight: 700 }}
@@ -698,9 +800,9 @@ const AIAssistantCommercePage: React.FC = () => {
                   (!filter.color || p.color === filter.color)
                 ).map(product => (
                   <Grid item xs={12} sm={6} md={4} key={product.id}>
-                    <ProductCard>
+                    <ProductCard onClick={() => { setProductDetail(product); setProductDetailOpen(true); }} sx={{ cursor: 'pointer' }}>
                       <CardContent>
-                        <Avatar src={product.image} sx={{ width: 56, height: 56, mb: 1, mx: 'auto', border: '2px solid #6366f1' }} />
+                        <Avatar src={product.images[0].urls[0]} sx={{ width: 56, height: 56, mb: 1, mx: 'auto', border: '2px solid #6366f1' }} />
                         <Typography fontWeight={700} fontSize={16}>{product.name}</Typography>
                         <Typography fontSize={14} color="#6366f1" fontWeight={600}>${product.price}</Typography>
                         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
@@ -755,7 +857,7 @@ const AIAssistantCommercePage: React.FC = () => {
                     {selectedOrder.productIds.map(pid => {
                       const p = products.find(pr => pr.id === pid);
                       return p ? (
-                        <Chip key={p.id} avatar={<Avatar src={p.image} />} label={p.name} />
+                        <Chip key={p.id} avatar={<Avatar src={p.images[0].urls[0]} />} label={p.name} />
                       ) : null;
                     })}
                   </Box>
@@ -784,41 +886,175 @@ const AIAssistantCommercePage: React.FC = () => {
                 <Box sx={{ flexGrow: 1 }} />
                 <IconButton onClick={() => setShowAdmin(false)}><Close /></IconButton>
               </Box>
-              <Tabs value={0}>
+              <Tabs value={adminTab} onChange={(_, v) => setAdminTab(v)}>
                 <Tab label="Products" />
                 <Tab label="Preview AI" />
               </Tabs>
-              <Divider sx={{ my: 2 }} />
-              <Typography fontWeight={700} sx={{ mb: 1 }}>Add/Edit Products</Typography>
-              {/* For brevity, just show product list and allow delete */}
-              <List>
-                {products.map(product => (
-                  <ListItem key={product.id}>
-                    <ListItemIcon><Avatar src={product.image} /></ListItemIcon>
-                    <ListItemText primary={product.name} secondary={`$${product.price}`} />
-                    <IconButton onClick={() => handleDeleteProduct(product.id)}><Delete color="error" /></IconButton>
-                  </ListItem>
-                ))}
-              </List>
-              <Button startIcon={<Add />} variant="contained" sx={{ mt: 2, bgcolor: '#6366f1' }} onClick={handleAddProduct}>Add Product</Button>
-              <Divider sx={{ my: 2 }} />
-              <Typography fontWeight={700} sx={{ mb: 1 }}>Preview AI Response</Typography>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Ask the AI (e.g. 'Show me socks bundle')"
-                onKeyDown={e => { if (e.key === 'Enter') handlePreviewAI((e.target as HTMLInputElement).value); }}
-                sx={{ mb: 1 }}
-              />
-              <Paper sx={{ p: 2, bgcolor: '#f3f4f6', borderRadius: 3, minHeight: 60 }}>
-                <Typography fontSize={15} color="#6366f1">{previewAIResponse}</Typography>
-              </Paper>
+              {adminTab === 0 && (
+                <>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography fontWeight={700} sx={{ mb: 1 }}>Add/Edit Products</Typography>
+                  {/* For brevity, just show product list and allow delete */}
+                  <List>
+                    {products.map(product => (
+                      <ListItem key={product.id}>
+                        <ListItemIcon><Avatar src={product.images[0].urls[0]} /></ListItemIcon>
+                        <ListItemText primary={product.name} secondary={`$${product.price}`} />
+                        <IconButton onClick={() => handleDeleteProduct(product.id)}><Delete color="error" /></IconButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                  <Button startIcon={<Add />} variant="contained" sx={{ mt: 2, bgcolor: '#6366f1' }} onClick={handleAddProduct}>Add Product</Button>
+                </>
+              )}
+              {adminTab === 1 && (
+                <>
+                  <Divider sx={{ my: 2 }} />
+                  {/* AI Inventory Suggestions Panel */}
+                  <Box sx={{ mb: 3, p: 2, borderRadius: 3, background: 'linear-gradient(90deg,#e0e7ff 0%,#f0fdfa 100%)', boxShadow: '0 2px 8px #6366f122' }}>
+                    <Typography variant="h6" fontWeight={800} color="#6366f1" sx={{ mb: 1 }}>
+                      <EmojiObjects sx={{ mr: 1, color: '#fbbf24' }} /> AI Inventory Suggestions
+                    </Typography>
+                    {aiInventorySuggestions.map((s, i) => (
+                      <Typography key={i} fontSize={15} sx={{ color: '#234567', mb: 0.5, display: 'flex', alignItems: 'center' }}>
+                        <Star sx={{ fontSize: 18, color: '#fbbf24', mr: 1 }} /> {s}
+                      </Typography>
+                    ))}
+                  </Box>
+                  <Typography fontWeight={700} sx={{ mb: 1 }}>Preview AI Response</Typography>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="Ask the AI (e.g. 'Show me socks bundle')"
+                    onKeyDown={e => { if (e.key === 'Enter') handlePreviewAI((e.target as HTMLInputElement).value); }}
+                    sx={{ mb: 1 }}
+                  />
+                  <Paper sx={{ p: 2, bgcolor: '#f3f4f6', borderRadius: 3, minHeight: 60 }}>
+                    <Typography fontSize={15} color="#6366f1">{previewAIResponse}</Typography>
+                  </Paper>
+                </>
+              )}
             </Box>
           </Drawer>
           {/* Snackbar for notifications */}
           <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
             <Alert severity={snackbar.severity} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>{snackbar.message}</Alert>
           </Snackbar>
+          {/* Add Product Dialog */}
+          <Dialog open={addProductOpen} onClose={handleAddProductClose} maxWidth="sm" fullWidth>
+            <DialogTitle>Add New Product</DialogTitle>
+            <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+              <TextField label="Product Name" value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} fullWidth required />
+              <TextField label="Description" value={newProduct.description} onChange={e => setNewProduct(p => ({ ...p, description: e.target.value }))} fullWidth multiline minRows={2} required />
+              <FormControl fullWidth>
+                <InputLabel>Sizes</InputLabel>
+                <Select
+                  multiple
+                  value={newProduct.sizes}
+                  onChange={e => setNewProduct(p => ({ ...p, sizes: e.target.value as string[] }))}
+                  input={<OutlinedInput label="Sizes" />}
+                  renderValue={selected => (selected as string[]).join(', ')}
+                >
+                  {sizeOptions.map(size => (
+                    <MenuItem key={size} value={size}>
+                      <Checkbox checked={newProduct.sizes.indexOf(size) > -1} />
+                      <ListItemText primary={size} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Gender</InputLabel>
+                <Select
+                  value={newProduct.gender}
+                  onChange={e => setNewProduct(p => ({ ...p, gender: e.target.value }))}
+                  label="Gender"
+                >
+                  {genderOptions.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <TextField label="Image URL" value={newProduct.images[0]} onChange={e => setNewProduct(p => ({ ...p, images: [e.target.value] }))} fullWidth required />
+              <TextField label="Price" type="number" value={newProduct.price} onChange={e => setNewProduct(p => ({ ...p, price: e.target.value }))} fullWidth required />
+              {addProductError && <Typography color="error">{addProductError}</Typography>}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleAddProductClose}>Cancel</Button>
+              <Button onClick={handleAddProductSubmit} variant="contained" sx={{ bgcolor: '#6366f1' }}>Add</Button>
+            </DialogActions>
+          </Dialog>
+          {/* Product Detail Modal */}
+          <Dialog open={productDetailOpen} onClose={() => setProductDetailOpen(false)} maxWidth="md" fullWidth>
+            {productDetail && (
+              <>
+                <DialogTitle sx={{ fontWeight: 800, color: '#6366f1' }}>{productDetail.name}</DialogTitle>
+                <DialogContent sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4, p: 3 }}>
+                  {/* Images carousel */}
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                      {productDetail.images.map((imgSet, idx) => (
+                        <Chip
+                          key={imgSet.color}
+                          label={imgSet.color}
+                          sx={{ bgcolor: selectedColor === imgSet.color ? '#6366f1' : '#e0e7ff', color: selectedColor === imgSet.color ? '#fff' : '#6366f1', fontWeight: 700 }}
+                          onClick={() => { setSelectedColor(imgSet.color); setCurrentImageIdx(0); }}
+                        />
+                      ))}
+                    </Box>
+                    <Box sx={{ position: 'relative', width: 320, height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <IconButton onClick={() => setCurrentImageIdx(i => Math.max(0, i - 1))} disabled={currentImageIdx === 0} sx={{ position: 'absolute', left: 0, zIndex: 2 }}>
+                        <ArrowBack />
+                      </IconButton>
+                      <img
+                        src={productDetail.images.find(i => i.color === selectedColor)?.urls[currentImageIdx] || productDetail.images[0].urls[0]}
+                        alt={productDetail.name}
+                        style={{ width: 280, height: 280, objectFit: 'cover', borderRadius: 16, boxShadow: '0 4px 24px #6366f133' }}
+                      />
+                      <IconButton onClick={() => setCurrentImageIdx(i => Math.min((productDetail.images.find(i => i.color === selectedColor)?.urls.length || 1) - 1, i + 1))} disabled={currentImageIdx === (productDetail.images.find(i => i.color === selectedColor)?.urls.length || 1) - 1} sx={{ position: 'absolute', right: 0, zIndex: 2 }}>
+                        <ArrowForward />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                  {/* Details */}
+                  <Box sx={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Typography fontWeight={700} fontSize={22}>{productDetail.name}</Typography>
+                    <Typography fontSize={16} color="#6366f1" fontWeight={600}>${productDetail.price}</Typography>
+                    <Typography fontSize={15} color="#888" sx={{ mb: 1 }}>{productDetail.description}</Typography>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
+                      <Typography fontWeight={600}>Color:</Typography>
+                      <Chip label={selectedColor || productDetail.color} sx={{ bgcolor: '#e0e7ff', color: '#6366f1', fontWeight: 700 }} />
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
+                      <Typography fontWeight={600}>Size:</Typography>
+                      <Select
+                        value={selectedSize}
+                        onChange={e => setSelectedSize(e.target.value)}
+                        displayEmpty
+                        sx={{ minWidth: 100 }}
+                      >
+                        <MenuItem value="">Select Size</MenuItem>
+                        {productDetail.size.map(sz => (
+                          <MenuItem key={sz} value={sz}>{sz}</MenuItem>
+                        ))}
+                      </Select>
+                    </Box>
+                    <Typography fontSize={15} sx={{ color: '#222', mt: 2, mb: 1, fontWeight: 600 }}>Product Details</Typography>
+                    <Typography fontSize={15} color="#444" sx={{ mb: 2 }}>{productDetail.longDescription}</Typography>
+                    <Button
+                      variant="contained"
+                      sx={{ bgcolor: '#6366f1', color: '#fff', borderRadius: 3, fontWeight: 700, mt: 2, width: 180 }}
+                      disabled={!selectedSize}
+                      onClick={() => alert('Purchase flow here!')}
+                    >
+                      Purchase
+                    </Button>
+                  </Box>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => setProductDetailOpen(false)}>Close</Button>
+                </DialogActions>
+              </>
+            )}
+          </Dialog>
         </Grid>
       </Grid>
     </Box>

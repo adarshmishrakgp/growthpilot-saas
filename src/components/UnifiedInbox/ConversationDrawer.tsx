@@ -23,6 +23,12 @@ interface Props {
 
 const ConversationDrawer: React.FC<Props> = ({ thread, onClose }) => {
   const [tab, setTab] = useState(0);
+  const [localThread, setLocalThread] = useState(thread ? [...thread.thread] : []);
+  const [selectedTone, setSelectedTone] = useState('friendly');
+
+  React.useEffect(() => {
+    setLocalThread(thread ? [...thread.thread] : []);
+  }, [thread]);
 
   if (!thread) {
     return null;
@@ -39,6 +45,17 @@ const ConversationDrawer: React.FC<Props> = ({ thread, onClose }) => {
       default:
         return 'default';
     }
+  };
+
+  const handleSendMessage = (text: string) => {
+    setLocalThread(prev => [
+      ...prev,
+      {
+        from: 'user',
+        text,
+        time: 'now',
+      }
+    ]);
   };
 
   return (
@@ -114,13 +131,23 @@ const ConversationDrawer: React.FC<Props> = ({ thread, onClose }) => {
               </Box>
             )}
             
-            {thread.thread.map((message, index) => (
+            {localThread.map((message, index) => (
               <MessageBubble
                 key={index}
                 message={message}
                 isAI={message.from === 'ai'}
               />
             ))}
+            {/* Tone Selector above Quick Replies (vertical layout) */}
+            <Box sx={{ mt: 2, mb: 1 }}>
+              <label htmlFor="tone-thread" style={{ fontWeight: 600, color: '#6366F1', marginRight: 8 }}>Select Tone:</label>
+              <select id="tone-thread" value={selectedTone} onChange={e => setSelectedTone(e.target.value)} style={{ fontWeight: 600, borderRadius: 4, padding: '2px 8px' }}>
+                <option value="friendly">Friendly</option>
+                <option value="formal">Formal</option>
+                <option value="concise">Concise</option>
+              </select>
+            </Box>
+            <QuickReplyButtons onSend={handleSendMessage} />
           </Box>
         )}
 
@@ -130,12 +157,8 @@ const ConversationDrawer: React.FC<Props> = ({ thread, onClose }) => {
               from="ai"
               text={thread.aiSuggested}
               time="now"
-              onSend={(suggestion) => {
-                // Handle sending the suggestion
-                console.log('Sending suggestion:', suggestion);
-              }}
+              onSend={handleSendMessage}
             />
-            <QuickReplyButtons />
           </Box>
         )}
 

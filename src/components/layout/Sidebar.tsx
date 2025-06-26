@@ -55,9 +55,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
-    { text: 'Smart Inbox', icon: <InboxIcon />, path: '/inbox' },
-    { text: 'Lead Generator', icon: <PersonSearchIcon />, path: '/leads' },
-    { text: 'Campaigns', icon: <CampaignIcon />, path: '/campaigns' },
+    // { text: 'Smart Inbox', icon: <InboxIcon />, path: '/inbox' },
+    // { text: 'Lead Generator', icon: <PersonSearchIcon />, path: '/leads' },
+    // { text: 'Campaigns', icon: <CampaignIcon />, path: '/campaigns' },
     { text: 'Unified Inbox', icon: <UnifiedInboxIcon />, path: '/unified-inbox' },
     { text: 'AI Commerce', icon: <ShoppingCart />, path: '/ai-commerce' },
     { text: 'Workflow Automation', icon: <ShoppingCart />, path: '/workflow-automation' },
