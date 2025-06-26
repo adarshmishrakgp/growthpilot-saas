@@ -60,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
     // { text: 'Campaigns', icon: <CampaignIcon />, path: '/campaigns' },
     { text: 'Unified Inbox', icon: <UnifiedInboxIcon />, path: '/unified-inbox' },
     { text: 'AI Commerce', icon: <ShoppingCart />, path: '/ai-commerce' },
-    { text: 'Workflow Automation', icon: <ShoppingCart />, path: '/workflow-automation' },
+    // { text: 'Workflow Automation', icon: <ShoppingCart />, path: '/workflow-automation' },
     { text: 'AI Voice Agent', icon: <ShoppingCart />, path: '/voice-agent' },
     { text: 'Multi-Channel Campaign', icon: <ShoppingCart />, path: '/multi-channel' },
     { text: 'CRM', icon: <ShoppingCart />, path: '/crm' },
